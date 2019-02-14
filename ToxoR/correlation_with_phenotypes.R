@@ -10,6 +10,7 @@ library(sme)
 
 
 ## Phenotypes
+## Initial Change
 phenotypes <- read.xlsx('../new_phenotypes.xlsx')
 phenotypes.B2 <- phenotypes %>% dplyr::filter(str_detect(passage, 'B2'))
 phenotypes.B2$passage <- gsub('B2 ', '', phenotypes.B2$passage)
