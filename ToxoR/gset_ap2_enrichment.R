@@ -5,7 +5,9 @@ library(tidyr)
 library(ggplot2)
 library(gridExtra)
 
-GeneSet.190 <- read.xlsx('../GSEA 2.12.19.xlsx')
+abs.path <- '~/work/ToxoplasmaGondii/'
+gse.file <- paste(abs.path, 'GSEA 2.12.19.xlsx', sep = '')
+GeneSet.190 <- read.xlsx(gse.file)
 ## Make less lenghty names
 colnames(GeneSet.190) <- 
   gsub("development", "devel", 
@@ -22,8 +24,8 @@ colnames(GeneSet.190) <-
 GeneSet.190 <- GeneSet.190 %>% gather(key = GeneSet, value = GeneName) %>% na.omit() %>% 
   group_by(GeneSet) %>% summarise(genes = list(as.character(GeneName)), total = n())
 
-
-toxo.tab <- read.xlsx('../toxo_table_batch_corrected_logCPM_expression_edgeR_DEGs_ap2_targs.xlsx')
+toxo.tab.file <- paste(abs.path, 'toxo_table_batch_corrected_logCPM_expression_edgeR_DEGs_ap2_targs.xlsx', sep = '')
+toxo.tab <- read.xlsx(toxo.tab.file)
 
 
 #### Get FC and Qvalue in tidy format
@@ -48,7 +50,7 @@ Category <- gsub("RH.intra", "RH",
                    gsub("RH.extra", "RH", 
                         gsub("^P.*[[:digit:]]\\.", "",
                              gsub("\\.P.*[[:digit:]]\\.", "\\.", 
-                                  as.character(toxo.fc$Contrast)))))
+                                  gsub('P7', 'B', as.character(toxo.fc$Contrast))))))
 
 sorted.ind1 <- sort(as.numeric(gsub("P", "", gsub('RH', 'P300', unique(Passage1)))), index.return = T)$ix
 sorted.ind2 <- sort(as.numeric(gsub("P", "", gsub('RH', 'P300', unique(Passage2)))), index.return = T)$ix
@@ -86,30 +88,50 @@ getEnrichment <- function(GeneSet, GeneSet.list){
   contrasts <- unique(XX$Contrast)
   
   extra.vs.extra.ind <- grep('(P.*extra)(.*P.*extra)',contrasts)
-  sorted.extra.vs.extra.ind <- extra.vs.extra.ind[
-    sort(as.numeric(gsub('P', '', gsub('\\.extra.*', '',contrasts[extra.vs.extra.ind]))), index.return = T)$ix]
+  
+  passage2 <- unlist(lapply(strsplit(as.character(contrasts[extra.vs.extra.ind]), split = '\\.vs\\.'), `[[`, 1))
+  passage1 <- unlist(lapply(strsplit(as.character(contrasts[extra.vs.extra.ind]), split = '\\.vs\\.'), `[[`, 2))
+  dd <- data.frame(p1 = as.numeric(gsub('P', '',gsub('\\.extra', '', passage1))), 
+             p2 = as.numeric(gsub('P', '',gsub('\\.extra', '', passage2)))) 
+  rownames(dd) <- 1:nrow(dd)
+  sorted.extra.vs.extra.ind <- extra.vs.extra.ind[with(dd, order(p1, p2))]
+  #sorted.extra.vs.extra.ind <- extra.vs.extra.ind[
+  #  sort(as.numeric(gsub('P', '', gsub('\\.extra.*', '',contrasts[extra.vs.extra.ind]))), index.return = T)$ix]
   
   intra.vs.intra.ind <- grep('(P.*intra)(.*P.*intra)',contrasts)
-  sorted.intra.vs.intra.ind <- intra.vs.intra.ind[
-    sort(as.numeric(gsub('P', '', gsub('\\.intra.*', '',contrasts[intra.vs.intra.ind]))), index.return = T)$ix]
+  passage2 <- unlist(lapply(strsplit(as.character(contrasts[intra.vs.intra.ind]), split = '\\.vs\\.'), `[[`, 1))
+  passage1 <- unlist(lapply(strsplit(as.character(contrasts[intra.vs.intra.ind]), split = '\\.vs\\.'), `[[`, 2))
+  dd <- data.frame(p1 = as.numeric(gsub('P', '',gsub('\\.intra', '', passage1))), 
+                   p2 = as.numeric(gsub('P', '',gsub('\\.intra', '', passage2)))) 
+  rownames(dd) <- 1:nrow(dd)
+  sorted.intra.vs.intra.ind <- intra.vs.intra.ind[with(dd, order(p1, p2))]
+  
+  #sorted.intra.vs.intra.ind <- intra.vs.intra.ind[
+  #  sort(as.numeric(gsub('P', '', gsub('\\.intra.*', '',contrasts[intra.vs.intra.ind]))), index.return = T)$ix]
   
   extra.vs.intra.ind <- grep('(P.*extra)(.*P.*intra)',contrasts)
   sorted.extra.vs.intra.ind <- extra.vs.intra.ind[
     sort(as.numeric(gsub('P', '', gsub('\\.extra.*', '',contrasts[extra.vs.intra.ind]))), index.return = T)$ix]
   
   
-  RH.vs.RH.ind <- grep('(.*RH)(.*RH)',contrasts)
+  RH.vs.RH.ind <- grep('(RH.*)(RH.*)',contrasts)
   
-  intra.vs.RH.ind <- grep('(.*intra)(.*RH)',contrasts)
-  sorted.intra.vs.RH.ind <- intra.vs.RH.ind[
-    sort(as.numeric(gsub('P', '', gsub('\\.intra.*', '',contrasts[intra.vs.RH.ind]))), index.return = T)$ix]
+  RH.vs.intra.ind <- grep('(RH\\.intra)(.*P.*intra)',contrasts)
+  sorted.RH.vs.intra.ind <- RH.vs.intra.ind[
+    sort(as.numeric(gsub('P', '', 
+                         gsub('\\.intra.*', '',
+                              gsub('RH\\.intra\\.vs\\.', '', contrasts[RH.vs.intra.ind])))), 
+         index.return = T)$ix]
   
-  extra.vs.RH.ind <- grep('(.*extra)(.*RH.extra)',contrasts)
-  sorted.extra.vs.RH.ind <- extra.vs.RH.ind[
-    sort(as.numeric(gsub('P', '', gsub('\\.extra.*', '',contrasts[extra.vs.RH.ind]))), index.return = T)$ix]
+  RH.vs.extra.ind <- grep('(RH\\.extra)(.*P.*extra)',contrasts)
+  sorted.RH.vs.extra.ind <- RH.vs.extra.ind[
+    sort(as.numeric(gsub('P', '', 
+                         gsub('\\.extra.*', '',
+                              sub('RH\\.extra\\.vs\\.', '', contrasts[RH.vs.extra.ind])))), 
+         index.return = T)$ix]
   
   my.inds <- c(sorted.extra.vs.extra.ind, sorted.intra.vs.intra.ind, sorted.extra.vs.intra.ind, 
-               sorted.extra.vs.RH.ind, sorted.intra.vs.RH.ind, RH.vs.RH.ind )
+               sorted.RH.vs.extra.ind, sorted.RH.vs.intra.ind, RH.vs.RH.ind )
   XX$Contrast <- factor(contrasts, levels = contrasts[my.inds])
   GeneSets <- XX$GeneSet
   
@@ -142,8 +164,10 @@ GeneSet.list.down <- toxo.fc.qval.down.reg %>% group_by(Contrast) %>%
 enrich.up <- getEnrichment(GeneSet.190, GeneSet.list.up)
 enrich.down <- getEnrichment(GeneSet.190, GeneSet.list.down)
 
-write.xlsx(x = enrich.up, file = "../GeneSet_enrichment_up_genes.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
-write.xlsx(x = enrich.down, file = "../GeneSet_enrichment_down_genes.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
+out.up.file <- paste(abs.path, "GeneSet_enrichment_up_genes.xlsx", sep = '')
+write.xlsx(x = enrich.up, file = out.up.file , sheetName = "overlaps", row.names = F, col.names = T)
+out.down.file <- paste(abs.path, "GeneSet_enrichment_down_genes.xlsx", sep = '')
+write.xlsx(x = enrich.down, file = out.down.file, sheetName = "overlaps", row.names = F, col.names = T)
 
 
 p1 <- ggplot(subset(enrich.up,pvalue < 0.01), aes(x = GeneSet, y = Contrast)) + 
@@ -151,13 +175,14 @@ p1 <- ggplot(subset(enrich.up,pvalue < 0.01), aes(x = GeneSet, y = Contrast)) +
   theme_bw(base_size = 12) +
   scale_colour_gradient(limits=c(0, 0.01), low="red") +
   ylab(NULL) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid(Category ~ ., scales='free') + 
+  theme(axis.text.x = element_text(angle = 90, hjust=0.95,vjust=0.2,size = 8)) + facet_grid(Category ~ ., scales='free') + 
   theme(strip.background = element_rect(colour="black", fill="white", 
                                         size=1, linetype="solid"))
 
 plot(p1)
 
-ggsave(filename="../GeneSet_enrichment_up_genes.pdf", plot=p1,
+out.pic <- paste(abs.path, "GeneSet_enrichment_up_genes.pdf", sep = '')
+ggsave(filename=out.pic, plot=p1,
        width = 12, height = 12, 
        units = "in", # other options are "in", "cm", "mm" 
        dpi = 300
@@ -170,13 +195,13 @@ p2 <- ggplot(subset(enrich.down, pvalue < 0.01), aes(x = GeneSet, y = Contrast))
   theme_bw(base_size = 12) +
   scale_colour_gradient(limits=c(0, 0.01), low="red") +
   ylab(NULL) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid(Category ~ ., scales='free') + 
+  theme(axis.text.x = element_text(angle = 90, hjust=0.95,vjust=0.2, size = 8)) + facet_grid(Category ~ ., scales='free') + 
   theme(strip.background = element_rect(colour="black", fill="white", 
                                         size=1, linetype="solid"))
 
 plot(p2)
-
-ggsave(filename="../GeneSet_enrichment_down_genes.pdf", plot=p2,
+out.pic <- paste(abs.path, "GeneSet_enrichment_down_genes.pdf", sep = '')
+ggsave(filename=out.pic, plot=p2,
        width = 12, height = 12, 
        units = "in", # other options are "in", "cm", "mm" 
        dpi = 300
@@ -210,8 +235,10 @@ AP2.targets$GeneSet <- factor(AP2.targets$GeneSet, levels = unique(AP2.targets$G
 AP2.enrich.up <- getEnrichment(AP2.targets, GeneSet.list.up)
 AP2.enrich.down <- getEnrichment(AP2.targets, GeneSet.list.down)
 
-write.xlsx(x = AP2.enrich.up, file = "../AP2_enrichment_up_genes.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
-write.xlsx(x = AP2.enrich.down, file = "../AP2_enrichment_down_genes.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
+ap2.up.file <- paste(abs.path, "AP2_enrichment_up_genes.xlsx")
+write.xlsx(x = AP2.enrich.up, file = ap2.up.file, sheetName = "overlaps", row.names = F, col.names = T)
+ap2.down.file <- paste(abs.path, "AP2_enrichment_down_genes.xlsx")
+write.xlsx(x = AP2.enrich.down, file = ap2.down.file, sheetName = "overlaps", row.names = F, col.names = T)
 
 
 p1 <- ggplot(subset(AP2.enrich.up, pvalue < 0.05), aes(x = GeneSet, y = Contrast)) + 
@@ -219,13 +246,14 @@ p1 <- ggplot(subset(AP2.enrich.up, pvalue < 0.05), aes(x = GeneSet, y = Contrast
   theme_bw(base_size = 12) +
   scale_colour_gradient(limits=c(0, 0.01), low="red") +
   ylab(NULL) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid(Category ~ ., scales='free') + 
+  theme(axis.text.x = element_text(angle = 90, hjust=0.95,vjust=0.2, size = 8)) + facet_grid(Category ~ ., scales='free') + 
   theme(strip.background = element_rect(colour="black", fill="white", 
                                         size=1, linetype="solid"))
 
 plot(p1)
 
-ggsave(filename="../AP2_enrichment_up_genes.pdf", plot=p1,
+out.pic <- paste(abs.path, "AP2_enrichment_up_genes.pdf", sep = '')
+ggsave(filename=out.pic, plot=p1,
        width = 12, height = 12, 
        units = "in", # other options are "in", "cm", "mm" 
        dpi = 300
@@ -238,13 +266,14 @@ p2 <- ggplot(subset(AP2.enrich.down, pvalue < 0.01), aes(x = GeneSet, y = Contra
   theme_bw(base_size = 12) +
   scale_colour_gradient(limits=c(0, 0.01), low="red") +
   ylab(NULL) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + facet_grid(Category ~ ., scales='free') + 
+  theme(axis.text.x = element_text(angle = 90, hjust=0.95,vjust=0.2, size = 8)) + facet_grid(Category ~ ., scales='free') + 
   theme(strip.background = element_rect(colour="black", fill="white", 
                                         size=1, linetype="solid"))
 
 plot(p2)
 
-ggsave(filename="../AP2_enrichment_down_genes.pdf", plot=p2,
+out.pic <- paste(abs.path, "AP2_enrichment_down_genes.pdf", sep = '')
+ggsave(filename=out.pic, plot=p2,
        width = 12, height = 12, 
        units = "in", # other options are "in", "cm", "mm" 
        dpi = 300
@@ -288,8 +317,11 @@ ThreeWay.spread.by.both <- ThreeWay %>%
   mutate(is.targ = 'yes') %>% distinct() %>% 
   spread(key = AP2, value = is.targ, fill = 'no') %>% dplyr::select(-c('<NA>'))
 
-
-write.xlsx(x = ThreeWay, file = "../ThreeWayDEGoverlaps.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
-write.xlsx(x = ThreeWay.spread.by.AP2, file = "../ThreeWayDEGoverlaps_Spread_by_AP2.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
-write.xlsx(x = ThreeWay.spread.by.GeneSet , file = "../ThreeWayDEGoverlaps_Spread_by_GeneSet.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
-write.xlsx(x = ThreeWay.spread.by.both, file = "../ThreeWayDEGoverlaps_Spread_by_both.xlsx", sheetName = "overlaps", row.names = F, col.names = T)
+threeway.file <- paste(abs.path, "ThreeWayDEGoverlaps.xlsx", sep = '')
+write.xlsx(x = ThreeWay, file = threeway.file , sheetName = "overlaps", row.names = F, col.names = T)
+threeway.file.ap2 <- paste(abs.path, "ThreeWayDEGoverlaps_Spread_by_AP2.xlsx", sep = '')
+write.xlsx(x = ThreeWay.spread.by.AP2, file = threeway.file.ap2, sheetName = "overlaps", row.names = F, col.names = T)
+threeway.file.gse <- paste(abs.path, "ThreeWayDEGoverlaps_Spread_by_GeneSet.xlsx", sep = '')
+write.xlsx(x = ThreeWay.spread.by.GeneSet , file = threeway.file.gse, sheetName = "overlaps", row.names = F, col.names = T)
+threeway.file.both <- paste(abs.path, "ThreeWayDEGoverlaps_Spread_by_both.xlsx", sep = '')
+write.xlsx(x = ThreeWay.spread.by.both, file = threeway.file.both, sheetName = "overlaps", row.names = F, col.names = T)

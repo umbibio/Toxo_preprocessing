@@ -10,8 +10,9 @@ library(sme)
 
 
 ## Phenotypes
-## Initial Change
-phenotypes <- read.xlsx('../new_phenotypes.xlsx')
+abs.path <- '~/work/ToxoplasmaGondii/'
+pheno.file <- paste(abs.path, 'new_phenotypes.xlsx', sep = '')
+phenotypes <- read.xlsx(pheno.file)
 phenotypes.B2 <- phenotypes %>% dplyr::filter(str_detect(passage, 'B2'))
 phenotypes.B2$passage <- gsub('B2 ', '', phenotypes.B2$passage)
 phenotypes.B2$phenotype <- factor(phenotypes.B2$phenotype, levels = unique(phenotypes.B2$phenotype))
@@ -24,7 +25,8 @@ phenotypes.B2.rep$passage <- factor(phenotypes.B2.rep$passage, levels = unique(p
 
 
 ## Get the expression of each replicate
-sep_rep <- read.xlsx('../toxo_table_batch_corrected_logCPM_expression_edgeR_DEGs_ap2_targs.xlsx')
+toxo.file <- paste(abs.path, 'toxo_table_batch_corrected_logCPM_expression_edgeR_DEGs_ap2_targs.xlsx', sep = '')
+sep_rep <- read.xlsx(toxo.file)
 
 ## For correlation exclude P7 and RH and look at extra only
 sep_rep.extra <- sep_rep %>% 
@@ -118,13 +120,18 @@ cor.mat <- sms.fit.pheno %>% group_by(GeneName) %>%
             cor.p.rep = cor(rep, Expr, method = "pearson"),
             cor.s.rep = cor(rep, Expr, method = "spearman"))
 
-expr_tab <- read.xlsx('../toxo_table_batch_corrected_logCPM_expression_edgeR_DEGs_ap2_targs.xlsx')
+expr_tab <- read.xlsx(toxo.file)
 
 expr_tab <- left_join(expr_tab, cor.mat, by = 'GeneName')
-write.xlsx(expr_tab, '../toxo_table_batch_corrected_logCPM_expression_edgeR_DEGs_ap2_targs_phenotype_correlations.xlsx')
+cor.file <- paste(abs.path, 
+                  'toxo_table_batch_corrected_logCPM_expression_edgeR_DEGs_ap2_targs_phenotype_correlations.xlsx', 
+                  sep = '')
+write.xlsx(expr_tab, cor.file)
 
 
 ### Make a 4 Way matirx with correlations, AP2 targets, gene sets and DEGs.
-ThreeWay <- read.xlsx('../ThreeWayDEGoverlaps.xlsx')
+threewayfile <- paste(abs.path, 'ThreeWayDEGoverlaps.xlsx', sep = '')
+ThreeWay <- read.xlsx(threewayfile)
 FourWay <- left_join(ThreeWay, cor.mat, by = 'GeneName')
-write.xlsx(FourWay, '../FourWayDEGoverlaps.xlsx')
+fourway.out <- paste(abs.path, 'FourWayDEGoverlaps.xlsx', sep = '')
+write.xlsx(FourWay, fourway.out)
