@@ -153,7 +153,7 @@ getBatchDEG <- function(case, control, batch, treatment, x){
 
 
 myContrasts <- function(){
-  contrasts <- data.frame(case = rep('', 23), control = rep('', 23), stringsAsFactors = F)
+  contrasts <- data.frame(case = rep('', 29), control = rep('', 29), stringsAsFactors = F)
   
   ## Extra over Intra
   contrasts$case[1] <- 'intra.P7';   contrasts$control[1] <- 'extra.P7'
@@ -189,6 +189,17 @@ myContrasts <- function(){
   contrasts$case[21] <- 'extra.RH'; contrasts$control[21] <- 'extra.P55'
   contrasts$case[22] <- 'extra.RH'; contrasts$control[22] <- 'extra.P148'
   contrasts$case[23] <- 'extra.RH'; contrasts$control[23] <- 'extra.P210'
+  
+  ## Intra over Intra
+  contrasts$case[24] <- 'intra.P7'; contrasts$control[24] <- 'intra.P85'
+  contrasts$case[25] <- 'intra.P7'; contrasts$control[25] <- 'intra.P148'
+  
+  ## Extra over Extra
+  contrasts$case[26]  <- 'extra.P7'; contrasts$control[26] <- 'extra.P35'
+  contrasts$case[27] <- 'extra.P7';  contrasts$control[27] <- 'extra.P55'
+  contrasts$case[28] <- 'extra.P7';  contrasts$control[28] <- 'extra.P148'
+  contrasts$case[29] <- 'extra.P7';  contrasts$control[29] <- 'extra.P210'
+  
   
   return(contrasts)
 }
