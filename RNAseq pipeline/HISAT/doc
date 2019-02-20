@@ -1,0 +1,24 @@
+HISAT PIPELINE
+
+1.	Converting GFF file to GTF 
+a.	Using gffread package 
+b.	Input: GFF
+c.	Output: GTF
+
+2.	Hisat2 extract Splice Site script called “hisat2_splice_site.sh”
+a.	Using extract_splice_site.py 
+b.	Input: GTF file 
+c.	Output: splice sites   “file.ss”
+
+
+3.	Hisat2 extract exon script called “hisat2_exon.sh”
+a.	Using extract_exon.py
+b.	Input: GTF file 
+c.	Output: exons  “file.exon”
+
+4.	Hisat2 build index script 
+a.	Inputs: 
+i.	IN_SS (splice sites file)
+ii.	IN_EX (exon file)
+iii.	IN_FA (genome fasta file)
+b.	Output: hisat2 indices
