@@ -23,12 +23,10 @@ ii.	IN_EX (exon file)
 iii.	IN_FA (genome fasta file)
 b.	Output: hisat2 indices
 
-5. hisat2 alignment script
-Inputs
-  a. Path To Directory of trimed fastq files containing R1s and R2s                                                                                                                                                                           
-  b. Path To Output Directory to store sam files outputed from this script                                                                                                                                                                    
-  c. Path To Index file (indexing based name)                                                                                                                                                                                                 
-  d. Path To Annotation file                                                                                                                                                                                                                  
-  e. Path To splice sites file
-Output
-  a. sam files
+5.	 Hisat2 alignment script
+a.	Inputs
+i.	Path to Directory of trimmed files
+ii.	Path to Output Directory to store sam files
+iii.	Path to index files obtained from step 4
+iv.	Path to Annotation/ GTF file 
+v.	Path to splice sites obtained from step 2
