@@ -25,10 +25,10 @@ b.	Output: hisat2 indices
 
 5. hisat2 alignment script
 Inputs
-a. Path To Directory of trimed fastq files containing R1s and R2s                                                                                                                                                                           
-b. Path To Output Directory to store sam files outputed from this script                                                                                                                                                                    
-c. Path To Index file (indexing based name)                                                                                                                                                                                                 
-d. Path To Annotation file                                                                                                                                                                                                                  
-e. Path To splice sites file
+  a. Path To Directory of trimed fastq files containing R1s and R2s                                                                                                                                                                           
+  b. Path To Output Directory to store sam files outputed from this script                                                                                                                                                                    
+  c. Path To Index file (indexing based name)                                                                                                                                                                                                 
+  d. Path To Annotation file                                                                                                                                                                                                                  
+  e. Path To splice sites file
 Output
-a. sam files
+  a. sam files
